@@ -4,6 +4,7 @@ library(ggpubr)
 library(devtools)
 install_github("vqv/ggbiplot")
 library(ggbiplot)
+library(MASS)
 
 #Download package
 phylum_matrix <- read.csv("data/mgRAST_mgp3362.txt", sep = "\t")
@@ -121,4 +122,22 @@ for (i in 1:22) {
 ggbiplot(phylum_matrix.pca, groups=groupsCroute, ellipse=TRUE, var.axes=FALSE)
 ggbiplot(phylum_matrix.pca, groups=groupsMilk, ellipse=TRUE, var.axes=FALSE)
 ggbiplot(phylum_matrix.pca, groups=groupsPasteurization, ellipse=TRUE, var.axes=FALSE)
+
+# LDA analysis
+
+## NB la matrice de données doit être transformée
+LDA<-lda(x=t(phylum_matrix),grouping=metadata$Pasteurized)
+## Calcul des valeurs pour chaque groupe
+LDA1_RawMilk<-colSums(apply(phylum_matrix[,metadata$Pasteurized=='N'],2,
+                            function(x){LDA$scaling*x}))
+LDA1_Pasteurized<-colSums(apply(phylum_matrix[,metadata$Pasteurized=='Y'],2,
+                                function(x){LDA$scaling*x}))
+#Représentation sous forme d'histogramme
+hist(LDA1_Pasteurized,xlim=c(min(LDA1_RawMilk)-4,max(LDA1_Pasteurized)+1),col='green',
+     xlab='LD1 means',ylab='Frequency',main='Predicted Values')
+hist(LDA1_RawMilk,col='red',add=T)
+legend('topleft',pch=19,col=c('red','green'),legend = c('Raw','Pasteurized'))
+par(mar=c(5,5,5,5))
+barplot(LDA$scaling[,1],names.arg = rownames(LDA$scaling),las=2,
+        col='black',cex.names = 0.76)
 
