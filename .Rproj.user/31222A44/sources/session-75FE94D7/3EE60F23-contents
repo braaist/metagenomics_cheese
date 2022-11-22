@@ -1,6 +1,9 @@
 library(ggplot2)
 install.packages("vegan")
 library(ggpubr)
+library(devtools)
+install_github("vqv/ggbiplot")
+library(ggbiplot)
 
 #Download package
 phylum_matrix <- read.csv("data/mgRAST_mgp3362.txt", sep = "\t")
@@ -68,7 +71,7 @@ SD1 == SD2
 
 
 #Check the associations of factors with qualitative variables
-metadata = read.csv("/Users/braaist/Documents/paris_metagenomics/MetadataCheese.csv", sep = "\t")
+metadata = read.csv("data/MetadataCheese.csv", sep = "\t")
 View(metadata)
 
 metadata_quantitative <- metadata[,colnames(metadata) %in% c("Moisture", "pH", "NaCl")] 
@@ -103,4 +106,19 @@ p <- ggboxplot(metadata_rest, x = "Pasteurized", y = "SD",
   stat_compare_means(comparisons = my_comparisons, method = "t.test")
 p
 
+# PCA analysis
+
+phylum_matrix.pca <- prcomp(t(phylum_matrix), center = TRUE,scale. = TRUE)
+summary(phylum_matrix.pca)
+groupsCroute = c()
+groupsMilk = c()
+groupsPasteurization = c()
+for (i in 1:22) {
+  groupsCroute <- c(groupsCroute, metadata[i, 'RindType'])
+  groupsMilk = c(groupsMilk, metadata[i, 'Milk'])
+  groupsPasteurization = c(groupsPasteurization, metadata[i, 'Pasteurized'])
+}
+ggbiplot(phylum_matrix.pca, groups=groupsCroute, ellipse=TRUE, var.axes=FALSE)
+ggbiplot(phylum_matrix.pca, groups=groupsMilk, ellipse=TRUE, var.axes=FALSE)
+ggbiplot(phylum_matrix.pca, groups=groupsPasteurization, ellipse=TRUE, var.axes=FALSE)
 

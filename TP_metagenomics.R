@@ -1,6 +1,9 @@
 library(ggplot2)
 install.packages("vegan")
 library(ggpubr)
+library(devtools)
+install_github("vqv/ggbiplot")
+library(ggbiplot)
 
 #Download package
 phylum_matrix <- read.csv("data/mgRAST_mgp3362.txt", sep = "\t")
@@ -9,7 +12,9 @@ View(phylum_matrix)
 
 names = colnames(phylum_matrix)
 
-otuCurve <- function(cheeseName) {
+#Plotting otu curve
+otuCurve <- function(cheeseName, K) {
+  #This returns the otu vector to plot the otu curve given one cheese id
   populationVector = c()
   for (i in 1:35) {
     if (phylum_matrix[i,cheeseName] > 0) {
@@ -26,7 +31,6 @@ otuCurve <- function(cheeseName) {
                        width = 50,   # Progress bar width. Defaults to getOption("width")
                        char = "=")
   num_samples = c()
-  K<-100
   for (i in 1:n) {
     for (j in 1:K) {
       sample = sample(populationVector, i, replace=FALSE)
@@ -39,29 +43,14 @@ otuCurve <- function(cheeseName) {
   return(otu)
 }
 
+otu<-otuCurve(names[3], 10)
+
 #Plotting
-out_df <- data.frame(samples=1:n,
+out_df <- data.frame(samples=1:length(otu),
                      OTU=otu)
 ggplot(data=out_df, aes(x=samples, y=OTU, group=1)) +
   geom_line(color="red")+
   geom_point()
-
-#calculate OTU statistics OLD
-init_vec = c()
-init_length = c()
-for (col in colnames(data.frame(phylum_matrix))){
-  init_vec = union(init_vec, rownames(data.frame(phylum_matrix[,col][phylum_matrix[,col] != 0])))
-  init_length = c(init_length, length(init_vec))
-}
-
-
-#Plotting
-out_df <- data.frame(samples=c(1:dim(phylum_matrix)[2]),
-                 OTU=init_length)
-ggplot(data=out_df, aes(x=samples, y=OTU, group=1)) +
-  geom_line(color="red")+
-  geom_point()
-
 
 #Custom function for the Shannon Diversity
 ShannonDiversity <- function(microbiome_vec){
@@ -82,7 +71,7 @@ SD1 == SD2
 
 
 #Check the associations of factors with qualitative variables
-metadata = read.csv("/Users/braaist/Documents/paris_metagenomics/MetadataCheese.csv", sep = "\t")
+metadata = read.csv("data/MetadataCheese.csv", sep = "\t")
 View(metadata)
 
 metadata_quantitative <- metadata[,colnames(metadata) %in% c("Moisture", "pH", "NaCl")] 
@@ -117,4 +106,19 @@ p <- ggboxplot(metadata_rest, x = "Pasteurized", y = "SD",
   stat_compare_means(comparisons = my_comparisons, method = "t.test")
 p
 
+# PCA analysis
+
+phylum_matrix.pca <- prcomp(t(phylum_matrix), center = TRUE,scale. = TRUE)
+summary(phylum_matrix.pca)
+groupsCroute = c()
+groupsMilk = c()
+groupsPasteurization = c()
+for (i in 1:22) {
+  groupsCroute <- c(groupsCroute, metadata[i, 'RindType'])
+  groupsMilk = c(groupsMilk, metadata[i, 'Milk'])
+  groupsPasteurization = c(groupsPasteurization, metadata[i, 'Pasteurized'])
+}
+ggbiplot(phylum_matrix.pca, groups=groupsCroute, ellipse=TRUE, var.axes=FALSE)
+ggbiplot(phylum_matrix.pca, groups=groupsMilk, ellipse=TRUE, var.axes=FALSE)
+ggbiplot(phylum_matrix.pca, groups=groupsPasteurization, ellipse=TRUE, var.axes=FALSE)
 
