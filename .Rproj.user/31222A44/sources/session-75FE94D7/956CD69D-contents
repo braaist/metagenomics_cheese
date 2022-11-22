@@ -1,0 +1,38 @@
+library(ggplot2)
+install.packages("sampler")
+library(sampler)
+
+#Download package
+phylum_matrix <- read.csv("mgRAST_mgp3362.txt", sep = "\t")
+phylum_matrix<-as.matrix(phylum_matrix)
+View(phylum_matrix)
+
+#calculate OTU statistics
+init_vec = c()
+init_length = c()
+for (col in colnames(data.frame(phylum_matrix))){
+  init_vec = union(init_vec, rownames(data.frame(phylum_matrix[,col][phylum_matrix[,col] != 0])))
+  init_length = c(init_length, length(init_vec))
+}
+
+names = colnames(phylum_matrix)
+df <- data.frame(matrix(ncol = 1, nrow = 0))
+colnames(df)<-c("elem")
+rep(rownames(phylum_matrix)[1], phylum_matrix[1,names[1]])
+for (row in rownames(phylum_matrix)) {
+  if (phylum_matrix[row, names[1]]!=0){
+    for (i in 1:phylum_matrix[row, names[1]]){
+      df[nrow(df) + 1,] = c(row)
+    }
+  }
+}
+otu = c(0)
+n <- colSums(phylum_matrix)[1]
+num_samples = 1:n
+for (i in 1:n) {
+  sample = rsamp(df, i, over=0, rep=FALSE)
+  otu<-c(otu, length(unique(sample$elem))) #moyenner sur 100x
+}
+
+#Plotting
+plot(num_samples, otu)

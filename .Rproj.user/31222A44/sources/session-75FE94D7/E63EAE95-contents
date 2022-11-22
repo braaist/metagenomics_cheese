@@ -1,0 +1,13 @@
+if (!requireNamespace("BiocManager", quietly = TRUE))
+  install.packages("BiocManager", quietly = TRUE)
+BiocManager::install("qvalue")
+list.of.packages = c('devtools','RJSONIO','ecodist','gplots','scatterplot3d',
+                     'usethis', 'httr', 'rcmdcheck', 'roxygen2', 'rversions')
+new.packages = list.of.packages[!(list.of.packages %in% installed.packages()[,"Package"])]
+if(length(new.packages)) install.packages(new.packages)
+install.packages("devtools")
+library(devtools)
+install_github(repo='MG-RAST/matR',quiet=F)
+library(matR)
+
+list_mgp3362<-as.matrix("mgRAST_mgp3362.txt")

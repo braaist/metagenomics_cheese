@@ -1,0 +1,3 @@
+install.packages("BiocManager")
+BiocManager::install(c("FactoMineR", "ggplot2","edgeR", "limma", "csaw", "GenomicRanges","tidyr", "dplyr"))
+
